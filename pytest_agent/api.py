@@ -1,3 +1,6 @@
+"""
+Defines API endpoints and policy.
+"""
 from typing import Dict, List
 
 from fastapi import FastAPI
@@ -24,19 +27,37 @@ api.add_middleware(
 )
 
 
+@api.post("/tests/collect", response_model=Dict[str, TestStatusReadDTO])
+def collect_and_update_tests():
+    """
+    collect_and_update_tests
+    """
+    TestsController.collect_and_update_tests()
+    return TestsRepository.get_statuses()
+
+
 @api.get("/tests/status", response_model=Dict[str, TestStatusReadDTO])
 def get_tests_statuses():
+    """
+    get_tests_statuses
+    """
     return TestsRepository.get_statuses()
 
 
 @api.post("/tests/run", response_model=Dict[str, TestStatusReadDTO])
-def get_tests_statuses(test_fullnames: List[str]):
+def run_tests_statuses(test_fullnames: List[str]):
+    """
+    run_tests_statuses
+    """
     TestsController.schedule_tests(test_fullnames)
     return TestsRepository.get_statuses()
 
 
 @api.get("/tests/output/{test_fullname:path}")
 def get_test_output(test_fullname: str):
+    """
+    get_test_output
+    """
     output = TestsRepository.get_output(test_fullname)
     if output is None:
         return None

@@ -1,3 +1,6 @@
+"""
+Instanciate all drivers used in applications as singletons.
+"""
 from concurrent.futures import ProcessPoolExecutor
 
 from sqlalchemy import create_engine

@@ -1,48 +1,57 @@
-import select
-import subprocess
+"""
+This module is responsible to run tests on host device.
+"""
+import re
 from typing import List
 
+from pytest_agent.commands import execute_command
 from pytest_agent.drivers import executor
 from pytest_agent.dtos import TestStatus
 from pytest_agent.repository import TestsRepository
-from pytest_agent.styling import cli_style_to_html
+
+TEST_PATTERN = re.compile(
+    r"(?P<fullname>(?P<modulename>[\w/\.]+)(?:::(?P<classname>\w+))?::(?P<funcname>\w+))"
+)
 
 
-def execute_command(command: str, capture_stderr=False) -> int:
-    # wrap command execution with "script" command to mock a real terminal and retrieve styling
-    process = subprocess.Popen(
-        ["script", "-e", "-q", "-c", command],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE if capture_stderr else None,
-    )
+class ControllerException(Exception):
+    """
+    Base exception for TestsController
+    """
 
-    # simultaneously read stdin and stdout to get both in same output variable
-    output = b""
 
-    while True:
-        reads = [process.stdout.fileno()]
-        if capture_stderr:
-            reads.append(process.stderr.fileno())
-
-        ret = select.select(reads, [], [])
-
-        for fd in ret[0]:
-            if fd == process.stdout.fileno():
-                output += process.stdout.readline()
-            if capture_stderr and fd == process.stderr.fileno():
-                output += process.stderr.readline()
-
-        if process.poll() != None:
-            break
-
-    print(output)
-
-    return cli_style_to_html(output.decode("utf-8")), process.returncode
+class TestCollectException(ControllerException):
+    """
+    Raise when something wrong happens in TestsController.collect_and_update_tests
+    """
 
 
 class TestsController:
+    """
+    Helper class to perform tests.
+    """
+
+    @staticmethod
+    def collect_and_update_tests():
+        """
+        Use pytest to collect tests in current directory and add these tests to test repository.
+        """
+        output, returncode = execute_command(
+            "python -m pytest --collect-only -q", capture_stderr=False
+        )
+        if returncode not in (0, 5):
+            raise TestCollectException("Failed to collect tests")
+
+        for match in TEST_PATTERN.finditer(output):
+            TestsRepository.update_test_status(
+                status=TestStatus.N_A, **match.groupdict()
+            )
+
     @staticmethod
     def run_test(test_fullname: str):
+        """
+        Run a test given its fullname, then store its output.
+        """
         output, returncode = execute_command(
             f"python -m pytest -v {test_fullname}", capture_stderr=True
         )
@@ -53,6 +62,10 @@ class TestsController:
 
     @classmethod
     def schedule_tests(cls, test_fullnames: List[str]):
+        """
+        Set tests status to pending, then they are added to executor
+        that will run it as soon as it will be available.
+        """
         for test_fullname in test_fullnames:
             TestsRepository.update_test_status(
                 fullname=test_fullname, status=TestStatus.PENDING
