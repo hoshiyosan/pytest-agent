@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 import click
@@ -23,9 +24,19 @@ def cli():
     type=int,
     help="Specify port of host machine on which service is going to listen",
 )
-def start_pytest_agent(host: str, port: int):
+@click.option(
+    "--workers",
+    default=2,
+    type=int,
+    help="Defines max number of workers that can process tests simultaneously",
+)
+def start_pytest_agent(host: str, port: int, workers: int):
+    environment = os.environ.copy()
+    environment["MAX_WORKER_PROCESSES"] = str(workers)
+
     subprocess.call(
-        ["uvicorn", "pytest_agent.api:api", "--host", host, "--port", str(port)]
+        ["uvicorn", "pytest_agent.api:api", "--host", host, "--port", str(port)],
+        env=environment
     )
 
 
