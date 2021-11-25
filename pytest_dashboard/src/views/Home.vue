@@ -1,26 +1,33 @@
 <template>
   <main>
-    <v-container>
+    <v-container style="padding-bottom: 3em">
       <h2>Welcome home</h2>
       <v-text-field label="Tipe a search here to filter tests" />
-      <test-list v-model="selectedTests" :modules="testModules" />
+      <test-list
+        v-model="selectedTests"
+        :modules="testModules"
+        @click="showTestOutput"
+      />
     </v-container>
 
     <div
       style="
+        z-index: 10;
         position: fixed;
         display: flex;
         left: 0;
         right: 0;
         bottom: 0;
-        background-color: rgba(0, 0, 0, 0.1);
+        background-color: #424242;
         padding: 8px 2em;
       "
     >
       <status-bar :metrics="testMetrics" />
       <v-spacer></v-spacer>
 
-      {{ selectedTestsCounter }} test(s) selected
+      <span style="color: white">
+        {{ selectedTestsCounter }} test(s) selected
+      </span>
       <v-icon
         color="green"
         @click="refreshResults()"
@@ -56,20 +63,24 @@
         mdi-delete
       </v-icon>
     </div>
+    <test-output-dialog v-model="isOutputDisplayed" :output="displayedOutput" />
   </main>
 </template>
 
 <script>
 import StatusBar from "@/components/StatusBar";
 import TestList from "@/components/TestList";
+import TestOutputDialog from "@/dialogs/TestOutputDialog";
 
 import { mapGetters, mapState } from "vuex";
 
 export default {
   name: "Home",
-  components: { StatusBar, TestList },
+  components: { StatusBar, TestList, TestOutputDialog },
   data: () => ({
     selectedTests: [],
+    displayedOutput: null,
+    isOutputDisplayed: false,
   }),
   computed: {
     ...mapState("agent", ["tests"]),
@@ -106,6 +117,15 @@ export default {
     },
     refreshResults() {
       this.$store.dispatch("agent/refreshTestResults");
+    },
+    dismissResults() {
+      this.$store.dispatch("agent/collectTests");
+    },
+    showTestOutput(fullname) {
+      this.$store.dispatch("agent/getTestOutput", fullname).then((output) => {
+        this.displayedOutput = output;
+        this.isOutputDisplayed = true;
+      });
     },
   },
 };

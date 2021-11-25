@@ -1,5 +1,8 @@
 import axios from "axios";
 
+const SECONDS = 1000;
+const REFRESH_TIMEOUT = 5 * SECONDS;
+
 const http = axios.create();
 
 function loadAgents() {
@@ -104,9 +107,24 @@ export default {
   },
 
   actions: {
-    async refreshTestResults({ commit }) {
+    setTests({ commit, dispatch }, tests) {
+      commit("setTests", tests);
+
+      let shouldRefresh = false;
+      for (let test of tests) {
+        if (test.status === "pending" || test.status === "running") {
+          shouldRefresh = true;
+          console.log("triggering refresh, culprit:", test);
+          break;
+        }
+      }
+      if (shouldRefresh) {
+        setTimeout(() => dispatch("refreshTestResults"), REFRESH_TIMEOUT);
+      }
+    },
+    async refreshTestResults({ dispatch }) {
       const response = await http.get("/tests/summary");
-      commit("setTests", response.data);
+      dispatch("setTests", response.data);
     },
     async addAgent({ commit, dispatch }, agentURL) {
       commit("addAgent", agentURL);
@@ -118,9 +136,17 @@ export default {
         await dispatch("refreshTestResults");
       }
     },
-    async runTests({ commit }, tests) {
+    async runTests({ dispatch }, tests) {
       const response = await http.post("/tests/run", tests);
-      commit("setTests", response.data);
+      dispatch("setTests", response.data);
+    },
+    async collectTests({ dispatch }) {
+      const response = await http.post("/tests/collect");
+      dispatch("setTests", response.data);
+    },
+    async getTestOutput(context, testFullname) {
+      const response = await http.get(`/tests/output/${testFullname}`);
+      return response.data;
     },
   },
 };

@@ -64,7 +64,7 @@
 
                 <v-list-item-icon>
                   <i style="margin-right: 0.5em">
-                    {{ test.refresh_date }}
+                    {{ test.refresh_date | humandate }}
                   </i>
                   <StatusIcon :status="test.status" />
                 </v-list-item-icon>
@@ -106,6 +106,11 @@ export default {
     },
     value(v) {
       this.selectedTests = v;
+    },
+  },
+  filters: {
+    humandate(s) {
+      return new Date(s).toLocaleString();
     },
   },
   methods: {

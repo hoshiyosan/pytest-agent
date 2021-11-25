@@ -12,7 +12,7 @@ const STATUS_COLOR = {
   failed: "red",
   running: "blue",
   pending: "teal",
-  total: "black",
+  total: "white",
 };
 
 const STATUS_ICON = {
