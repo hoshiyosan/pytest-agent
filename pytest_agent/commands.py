@@ -87,11 +87,14 @@ def execute_command(command: str, capture_stderr=False) -> Tuple[str, int]:
 
         status_code = process.returncode
 
+    # convert bytes to str
+    output = output.decode("utf-8")
+
     # escape unsafe html characters from output
     output = html.escape(output)
 
     # replace terminal style with html style
     context = StyleContext()
-    output = re.sub(STYLE_PATTERN, context.get, output.decode("utf-8"))
+    output = re.sub(STYLE_PATTERN, context.get, output)
 
     return output, status_code
