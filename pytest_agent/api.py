@@ -23,8 +23,7 @@ api = FastAPI(
 )
 
 static_path = pkg_resources.resource_filename(__name__, "static")
-
-api.mount("/static", StaticFiles(directory=static_path, html=True), name="static")
+api.mount("/ui", StaticFiles(directory=static_path, html=True), name="ui")
 
 api.add_middleware(
     CORSMiddleware,
@@ -36,7 +35,7 @@ api.add_middleware(
 
 @api.get("/")
 def home():
-    return RedirectResponse("/static")
+    return RedirectResponse("/ui")
 
 
 @api.post("/tests/collect", response_model=List[TestStatusReadDTO])
