@@ -7,7 +7,7 @@ from typing import Dict
 import sqlalchemy
 
 from pytest_agent.database import DBTest
-from pytest_agent.drivers import session
+from pytest_agent.drivers import Session
 from pytest_agent.dtos import TestStatus, TestStatusReadDTO
 
 
@@ -29,48 +29,47 @@ class TestsRepository:
         """
         Update test status and/or output.
         """
-        test_instance = session.query(DBTest).filter_by(fullname=fullname).first()
+        with Session() as session:
+            test_instance = session.query(DBTest).filter_by(fullname=fullname).first()
 
-        if test_instance is None:
-            test_instance = DBTest(
-                fullname=fullname,
-                status=status.value,
-                output=output,
-                modulename=modulename,
-                classname=classname,
-                funcname=funcname,
-            )
-            session.add(test_instance)
+            if test_instance is None:
+                test_instance = DBTest(
+                    fullname=fullname,
+                    status=status.value,
+                    output=output,
+                    modulename=modulename,
+                    classname=classname,
+                    funcname=funcname,
+                )
+                session.add(test_instance)
 
-        # only status/output/refresh_date can be updated
-        test_instance.status = status.value
-        test_instance.output = output
+            # only status/output/refresh_date can be updated
+            test_instance.status = status.value
+            test_instance.output = output
 
-        if TestStatus(test_instance.status) == TestStatus.N_A:
-            test_instance.refresh_date = None
-        else:
-            test_instance.refresh_date = datetime.utcnow().isoformat() + "Z"
+            if TestStatus(test_instance.status) == TestStatus.N_A:
+                test_instance.refresh_date = None
+            else:
+                test_instance.refresh_date = datetime.utcnow().isoformat() + "Z"
 
-        try:
             session.commit()
-        except sqlalchemy.exc.SQLAlchemyError as error:
-            session.rollback()
-            raise error
 
     @staticmethod
     def get_statuses() -> Dict[str, TestStatusReadDTO]:
         """
         Get statuses for all tests.
         """
-        tests = session.query(DBTest).all()
-        return [TestStatusReadDTO.from_orm(test) for test in tests]
+        with Session() as session:
+            tests = session.query(DBTest).all()
+            return [TestStatusReadDTO.from_orm(test) for test in tests]
 
     @staticmethod
     def get_output(fullname: str):
         """
         Get output of a test given its fullname.
         """
-        test_instance = session.query(DBTest).filter_by(fullname=fullname).first()
-        if not test_instance:
-            return None
-        return test_instance.output
+        with Session() as session:
+            test_instance = session.query(DBTest).filter_by(fullname=fullname).first()
+            if not test_instance:
+                return None
+            return test_instance.output

@@ -52,6 +52,9 @@ class TestsController:
         """
         Run a test given its fullname, then store its output.
         """
+        TestsRepository.update_test_status(
+            fullname=test_fullname, status=TestStatus.RUNNING
+        )
         output, returncode = execute_command(
             f"python -m pytest -v {test_fullname}", capture_stderr=True
         )
