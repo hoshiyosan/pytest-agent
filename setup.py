@@ -13,4 +13,5 @@ setuptools.setup(
     entry_points={"console_scripts": ["pytest-agent=pytest_agent.__main__:cli"]},
     long_description=load_long_description(),
     long_description_content_type='text/markdown',
+    include_package_data=True
 )

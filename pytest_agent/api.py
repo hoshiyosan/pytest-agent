@@ -1,9 +1,12 @@
 """
 Defines API endpoints and policy.
 """
+import pkg_resources
 from typing import List
 
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import PlainTextResponse
 
@@ -15,8 +18,13 @@ api = FastAPI(
     title="Pytest Agent API",
     description="Expose testing features and metrics via a REST API.",
     version="v1",
-    docs_url="/",
+    docs_url="/docs",
+    redoc_url=None
 )
+
+static_path = pkg_resources.resource_filename(__name__, "static")
+
+api.mount("/static", StaticFiles(directory=static_path, html=True), name="static")
 
 api.add_middleware(
     CORSMiddleware,
@@ -25,6 +33,10 @@ api.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@api.get("/")
+def home():
+    return RedirectResponse("/static")
 
 
 @api.post("/tests/collect", response_model=List[TestStatusReadDTO])
