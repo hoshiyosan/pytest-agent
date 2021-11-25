@@ -22,3 +22,6 @@ lint: $(VENV)
 
 serve: $(VENV)
 	$(BIN)/uvicorn pytest_agent.api:api --host 0.0.0.0 --reload
+
+build-ui:
+	cd pytest_dashboard && npm run build
