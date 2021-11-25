@@ -27,7 +27,7 @@ api.add_middleware(
 )
 
 
-@api.post("/tests/collect", response_model=Dict[str, TestStatusReadDTO])
+@api.post("/tests/collect", response_model=List[TestStatusReadDTO])
 def collect_and_update_tests():
     """
     collect_and_update_tests
@@ -36,7 +36,7 @@ def collect_and_update_tests():
     return TestsRepository.get_statuses()
 
 
-@api.get("/tests/status", response_model=Dict[str, TestStatusReadDTO])
+@api.get("/tests/summary", response_model=List[TestStatusReadDTO])
 def get_tests_statuses():
     """
     get_tests_statuses
@@ -44,7 +44,7 @@ def get_tests_statuses():
     return TestsRepository.get_statuses()
 
 
-@api.post("/tests/run", response_model=Dict[str, TestStatusReadDTO])
+@api.post("/tests/run", response_model=List[TestStatusReadDTO])
 def run_tests_statuses(test_fullnames: List[str]):
     """
     run_tests_statuses

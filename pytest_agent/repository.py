@@ -63,7 +63,7 @@ class TestsRepository:
         Get statuses for all tests.
         """
         tests = session.query(DBTest).all()
-        return {test.fullname: TestStatusReadDTO.from_orm(test) for test in tests}
+        return [TestStatusReadDTO.from_orm(test) for test in tests]
 
     @staticmethod
     def get_output(fullname: str):
