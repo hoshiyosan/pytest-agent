@@ -1,7 +1,7 @@
 """
 Defines API endpoints and policy.
 """
-from typing import Dict, List
+from typing import List
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
