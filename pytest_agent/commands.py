@@ -3,6 +3,7 @@ This module defines functions used to run commands and retrieve their output
 """
 import re
 import select
+import html
 import subprocess
 from typing import Tuple
 
@@ -85,6 +86,9 @@ def execute_command(command: str, capture_stderr=False) -> Tuple[str, int]:
                 break
 
         status_code = process.returncode
+
+    # escape unsafe html characters from output
+    output = html.escape(output)
 
     # replace terminal style with html style
     context = StyleContext()
